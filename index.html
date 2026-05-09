@@ -1,0 +1,1864 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TaskFlow — Intelligent Work, Orchestrated</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=JetBrains+Mono:wght@300;400;500&family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink:        #0a0b0f;
+    --paper:      #f5f3ee;
+    --paper-warm: #ede9e0;
+    --paper-mid:  #e8e3d8;
+    --accent:     #c8502a;
+    --accent-dim: rgba(200,80,42,0.12);
+    --gold:       #c9a84c;
+    --sage:       #4a7c59;
+    --blue:       #2a6fc8;
+    --muted:      #7a7468;
+    --rule:       rgba(0,0,0,0.10);
+    --rule-dark:  rgba(255,255,255,0.08);
+    --radius:     8px;
+    --radius-sm:  5px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Manrope', sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+    overflow-x: hidden;
+    cursor: default;
+  }
+
+  /* ── NOISE TEXTURE ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+    mix-blend-mode: multiply;
+  }
+
+  /* ── STICKY NAV ── */
+  .site-nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 500;
+    padding: 20px 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: background 0.4s, backdrop-filter 0.4s, box-shadow 0.4s;
+  }
+
+  .site-nav.scrolled {
+    background: rgba(10,11,15,0.92);
+    backdrop-filter: blur(16px);
+    box-shadow: 0 1px 0 rgba(255,255,255,0.06);
+  }
+
+  .nav-logo-mark {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+  }
+
+  .logo-icon {
+    width: 32px;
+    height: 32px;
+    background: var(--accent);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .logo-icon svg { width: 16px; height: 16px; }
+
+  .logo-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--paper);
+    letter-spacing: -0.01em;
+  }
+
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 36px;
+    list-style: none;
+  }
+
+  .nav-links a {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.45);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .nav-links a:hover { color: rgba(255,255,255,0.9); }
+
+  .nav-cta {
+    background: var(--accent);
+    color: var(--paper) !important;
+    padding: 9px 20px !important;
+    border-radius: var(--radius-sm);
+    font-weight: 500 !important;
+    transition: background 0.2s !important;
+    letter-spacing: 0.12em !important;
+  }
+
+  .nav-cta:hover { background: #b5442200 !important; color: var(--accent) !important; outline: 1px solid var(--accent); }
+
+  /* ── HERO ── */
+  .hero {
+    background: var(--ink);
+    min-height: 100vh;
+    position: relative;
+    overflow: hidden;
+    display: grid;
+    place-items: center;
+    padding: 120px 64px 80px;
+  }
+
+  .hero-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+    background-size: 72px 72px;
+  }
+
+  .hero-glow-1 {
+    position: absolute;
+    width: 700px; height: 700px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(200,80,42,0.2) 0%, transparent 65%);
+    top: -200px; right: -150px;
+    animation: breathe 7s ease-in-out infinite alternate;
+    pointer-events: none;
+  }
+
+  .hero-glow-2 {
+    position: absolute;
+    width: 500px; height: 500px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(42,111,200,0.14) 0%, transparent 65%);
+    bottom: -100px; left: 5%;
+    animation: breathe 9s ease-in-out infinite alternate-reverse;
+    pointer-events: none;
+  }
+
+  .hero-glow-3 {
+    position: absolute;
+    width: 300px; height: 300px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(201,168,76,0.10) 0%, transparent 65%);
+    top: 40%; left: 40%;
+    animation: breathe 11s ease-in-out infinite alternate;
+    pointer-events: none;
+  }
+
+  @keyframes breathe {
+    from { transform: scale(1) translate(0,0); opacity: 0.7; }
+    to   { transform: scale(1.2) translate(20px, -20px); opacity: 1; }
+  }
+
+  .hero-inner {
+    position: relative;
+    text-align: center;
+    max-width: 900px;
+  }
+
+  .hero-eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    opacity: 0;
+    animation: fade-up-in 0.7s 0.2s ease forwards;
+  }
+
+  .hero-eyebrow::before, .hero-eyebrow::after {
+    content: '';
+    width: 32px; height: 1px;
+    background: var(--accent);
+    opacity: 0.6;
+  }
+
+  .hero-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(56px, 8.5vw, 112px);
+    font-weight: 300;
+    line-height: 0.95;
+    color: var(--paper);
+    letter-spacing: -0.03em;
+    margin-bottom: 12px;
+    opacity: 0;
+    animation: fade-up-in 0.8s 0.35s ease forwards;
+  }
+
+  .hero-title em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .hero-title .line-2 {
+    display: block;
+    color: rgba(255,255,255,0.25);
+    font-style: italic;
+    font-size: 0.85em;
+  }
+
+  .hero-sub {
+    font-size: 17px;
+    font-weight: 300;
+    color: rgba(255,255,255,0.42);
+    max-width: 540px;
+    margin: 28px auto 48px;
+    line-height: 1.8;
+    opacity: 0;
+    animation: fade-up-in 0.8s 0.5s ease forwards;
+  }
+
+  .hero-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    opacity: 0;
+    animation: fade-up-in 0.8s 0.65s ease forwards;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: var(--paper);
+    padding: 14px 32px;
+    border-radius: var(--radius);
+    font-family: 'Manrope', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-decoration: none;
+    transition: transform 0.2s, box-shadow 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(200,80,42,0.35);
+  }
+
+  .btn-ghost {
+    background: transparent;
+    color: rgba(255,255,255,0.5);
+    padding: 14px 28px;
+    border-radius: var(--radius);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 400;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    text-decoration: none;
+    border: 1px solid rgba(255,255,255,0.12);
+    transition: border-color 0.2s, color 0.2s;
+  }
+
+  .btn-ghost:hover { border-color: rgba(255,255,255,0.3); color: rgba(255,255,255,0.8); }
+
+  @keyframes fade-up-in {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── HERO STATS BAR ── */
+  .hero-stats {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    border-top: 1px solid rgba(255,255,255,0.07);
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    opacity: 0;
+    animation: fade-up-in 0.8s 0.9s ease forwards;
+  }
+
+  .stat-cell {
+    padding: 28px 40px;
+    border-right: 1px solid rgba(255,255,255,0.07);
+    text-align: center;
+  }
+
+  .stat-cell:last-child { border-right: none; }
+
+  .stat-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 36px;
+    font-weight: 300;
+    color: var(--paper);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .stat-num em { color: var(--accent); font-style: normal; }
+
+  .stat-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    color: rgba(255,255,255,0.28);
+    text-transform: uppercase;
+  }
+
+  /* ── TOC DOTS ── */
+  .toc-fixed {
+    position: fixed;
+    right: 28px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 400;
+  }
+
+  .toc-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.18);
+    cursor: pointer;
+    transition: background 0.25s, transform 0.25s;
+    position: relative;
+  }
+
+  .toc-dot.on-dark { background: rgba(255,255,255,0.22); }
+  .toc-dot.active, .toc-dot:hover { background: var(--accent); transform: scale(1.5); }
+
+  .toc-dot[data-label]:hover::before {
+    content: attr(data-label);
+    position: absolute;
+    right: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    white-space: nowrap;
+    color: var(--ink);
+    background: var(--paper);
+    padding: 3px 8px;
+    border-radius: var(--radius-sm);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+    letter-spacing: 0.1em;
+  }
+
+  /* ── SECTION COMMON ── */
+  .section {
+    padding: 110px 64px;
+    position: relative;
+  }
+
+  .section-inner { max-width: 1200px; margin: 0 auto; }
+
+  .eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .eyebrow::before {
+    content: '';
+    width: 28px; height: 1px;
+    background: var(--accent);
+  }
+
+  .section-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(38px, 4.5vw, 60px);
+    font-weight: 300;
+    line-height: 1.05;
+    color: var(--ink);
+    letter-spacing: -0.02em;
+    margin-bottom: 18px;
+  }
+
+  .section-title em { font-style: italic; color: var(--accent); }
+
+  .section-lead {
+    font-size: 16px;
+    font-weight: 300;
+    color: var(--muted);
+    max-width: 580px;
+    line-height: 1.8;
+    margin-bottom: 64px;
+  }
+
+  /* ── FADE ANIMATIONS ── */
+  .fade-up {
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity 0.65s ease, transform 0.65s ease;
+  }
+
+  .fade-up.visible { opacity: 1; transform: translateY(0); }
+
+  .fade-up-d1 { transition-delay: 0.05s; }
+  .fade-up-d2 { transition-delay: 0.12s; }
+  .fade-up-d3 { transition-delay: 0.19s; }
+  .fade-up-d4 { transition-delay: 0.26s; }
+  .fade-up-d5 { transition-delay: 0.33s; }
+  .fade-up-d6 { transition-delay: 0.40s; }
+
+  /* ── PROBLEM SECTION ── */
+  .problem-section {
+    background: var(--paper-warm);
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .problem-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 64px;
+    align-items: center;
+  }
+
+  .problem-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .problem-item {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    padding: 20px 24px;
+    background: var(--paper);
+    border-radius: var(--radius);
+    border: 1px solid var(--rule);
+    transition: box-shadow 0.25s;
+  }
+
+  .problem-item:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
+
+  .problem-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .problem-text {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.65;
+  }
+
+  .problem-text strong { color: var(--ink); font-weight: 600; display: block; margin-bottom: 3px; font-size: 14px; }
+
+  .solution-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--accent);
+    color: var(--paper);
+    padding: 8px 16px;
+    border-radius: var(--radius);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+
+  /* ── FEATURES ── */
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+
+  .feature-card {
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    padding: 36px 32px;
+    position: relative;
+    overflow: hidden;
+    transition: box-shadow 0.3s, transform 0.3s, border-color 0.3s;
+  }
+
+  .feature-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--accent);
+    transform: scaleX(0);
+    transform-origin: left;
+    border-radius: var(--radius) var(--radius) 0 0;
+    transition: transform 0.35s ease;
+  }
+
+  .feature-card:hover { box-shadow: 0 8px 40px rgba(0,0,0,0.08); transform: translateY(-4px); border-color: rgba(0,0,0,0.15); }
+  .feature-card:hover::before { transform: scaleX(1); }
+
+  .feature-card.featured {
+    background: var(--ink);
+    border-color: transparent;
+  }
+
+  .feature-card.featured::before { background: var(--accent); }
+
+  .f-icon-wrap {
+    width: 44px; height: 44px;
+    border-radius: var(--radius-sm);
+    background: var(--accent-dim);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    margin-bottom: 20px;
+    transition: background 0.2s;
+  }
+
+  .feature-card:hover .f-icon-wrap { background: rgba(200,80,42,0.2); }
+  .feature-card.featured .f-icon-wrap { background: rgba(200,80,42,0.2); }
+
+  .f-title {
+    font-family: 'Manrope', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 10px;
+    letter-spacing: -0.01em;
+  }
+
+  .feature-card.featured .f-title { color: var(--paper); }
+
+  .f-desc {
+    font-size: 13.5px;
+    color: var(--muted);
+    line-height: 1.7;
+    font-weight: 300;
+  }
+
+  .feature-card.featured .f-desc { color: rgba(255,255,255,0.45); }
+
+  .f-tag {
+    display: inline-block;
+    margin-top: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: var(--accent-dim);
+    padding: 3px 8px;
+    border-radius: 3px;
+  }
+
+  /* ── HOW IT WORKS ── */
+  .how-section { background: var(--ink); }
+  .how-section .section-title { color: var(--paper); }
+  .how-section .section-lead { color: rgba(255,255,255,0.4); }
+  .how-section .eyebrow { color: var(--accent); }
+  .how-section .eyebrow::before { background: var(--accent); }
+
+  .steps-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    position: relative;
+  }
+
+  .steps-row::before {
+    content: '';
+    position: absolute;
+    top: 28px;
+    left: calc(12.5% + 24px);
+    right: calc(12.5% + 24px);
+    height: 1px;
+    background: rgba(255,255,255,0.1);
+  }
+
+  .step-col {
+    padding: 0 20px;
+    text-align: center;
+  }
+
+  .step-num-wrap {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 28px;
+    position: relative;
+    background: var(--ink);
+    transition: border-color 0.3s;
+  }
+
+  .step-col:hover .step-num-wrap { border-color: var(--accent); }
+
+  .step-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-weight: 300;
+    color: var(--accent);
+  }
+
+  .step-title {
+    font-family: 'Manrope', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--paper);
+    margin-bottom: 10px;
+    letter-spacing: -0.01em;
+  }
+
+  .step-desc {
+    font-size: 13px;
+    color: rgba(255,255,255,0.35);
+    line-height: 1.7;
+    font-weight: 300;
+  }
+
+  /* ── OMNICHANNEL BANNER ── */
+  .channels-section {
+    background: var(--ink);
+    border-top: 1px solid rgba(255,255,255,0.06);
+    padding: 60px 64px;
+    overflow: hidden;
+  }
+
+  .channels-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.25em;
+    color: rgba(255,255,255,0.25);
+    text-transform: uppercase;
+    text-align: center;
+    margin-bottom: 32px;
+  }
+
+  .channels-track {
+    display: flex;
+    gap: 16px;
+    animation: scroll-track 28s linear infinite;
+    width: max-content;
+  }
+
+  .channels-track-wrap {
+    overflow: hidden;
+    mask-image: linear-gradient(90deg, transparent, black 10%, black 90%, transparent);
+  }
+
+  @keyframes scroll-track {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+
+  .channel-pill {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 100px;
+    padding: 12px 20px;
+    white-space: nowrap;
+    transition: background 0.2s;
+  }
+
+  .channel-pill-icon { font-size: 16px; }
+
+  .channel-pill-name {
+    font-family: 'Manrope', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.55);
+    letter-spacing: 0.02em;
+  }
+
+  /* ── DASHBOARD MOCKUP ── */
+  .mockup-section { background: var(--paper-warm); border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+
+  .mockup-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 64px;
+    align-items: center;
+  }
+
+  .mockup-frame {
+    background: var(--ink);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.22);
+    border: 1px solid rgba(255,255,255,0.08);
+    aspect-ratio: 4/3;
+    position: relative;
+  }
+
+  .mockup-topbar {
+    background: rgba(255,255,255,0.04);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .mock-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .mock-dot-r { background: #ff5f56; }
+  .mock-dot-y { background: #ffbd2e; }
+  .mock-dot-g { background: #27c93f; }
+
+  .mock-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: rgba(255,255,255,0.25);
+    letter-spacing: 0.15em;
+    margin-left: 8px;
+  }
+
+  .mockup-body {
+    padding: 20px;
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    gap: 16px;
+    height: calc(100% - 41px);
+  }
+
+  .mock-sidebar {
+    background: rgba(255,255,255,0.025);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .mock-nav-item {
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px;
+    color: rgba(255,255,255,0.3);
+    letter-spacing: 0.12em;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .mock-nav-item.active {
+    background: var(--accent);
+    color: white;
+  }
+
+  .mock-main {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .mock-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    flex: 1;
+  }
+
+  .mock-card-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 7px;
+    color: rgba(255,255,255,0.25);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .mock-bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .mock-bar-label { font-size: 8px; color: rgba(255,255,255,0.3); font-family: 'JetBrains Mono', monospace; width: 50px; }
+  .mock-bar-track { flex: 1; height: 4px; background: rgba(255,255,255,0.07); border-radius: 2px; overflow: hidden; }
+  .mock-bar-fill { height: 100%; border-radius: 2px; background: var(--accent); }
+
+  .mock-tasks { display: flex; flex-direction: column; gap: 6px; }
+
+  .mock-task {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.025);
+  }
+
+  .mock-task-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .mock-task-text { font-family: 'JetBrains Mono', monospace; font-size: 7.5px; color: rgba(255,255,255,0.35); }
+  .mock-task-badge { margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 7px; padding: 2px 5px; border-radius: 2px; }
+
+  .mock-stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .mock-stat {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: var(--radius-sm);
+    padding: 10px;
+    text-align: center;
+  }
+
+  .mock-stat-val {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-weight: 300;
+    color: var(--paper);
+    line-height: 1;
+    margin-bottom: 3px;
+  }
+
+  .mock-stat-key {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 7px;
+    color: rgba(255,255,255,0.22);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  /* ── TESTIMONIALS ── */
+  .testimonials-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+
+  .testi-card {
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    padding: 32px;
+    position: relative;
+    overflow: hidden;
+    transition: box-shadow 0.3s, transform 0.3s;
+  }
+
+  .testi-card:hover {
+    box-shadow: 0 8px 36px rgba(0,0,0,0.08);
+    transform: translateY(-3px);
+  }
+
+  .testi-quote-mark {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 80px;
+    color: rgba(200,80,42,0.1);
+    line-height: 0.7;
+    margin-bottom: 12px;
+    font-style: italic;
+    font-weight: 600;
+  }
+
+  .testi-text {
+    font-size: 14px;
+    color: var(--ink);
+    line-height: 1.75;
+    font-weight: 300;
+    margin-bottom: 24px;
+    font-style: italic;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 17px;
+  }
+
+  .testi-author {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-top: 1px solid var(--rule);
+    padding-top: 20px;
+  }
+
+  .testi-avatar {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: var(--accent-dim);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 16px;
+    color: var(--accent);
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  .testi-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+
+  .testi-role {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  /* ── PRICING ── */
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    align-items: start;
+  }
+
+  .price-card {
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    padding: 40px 32px;
+    position: relative;
+    overflow: hidden;
+    transition: box-shadow 0.3s;
+  }
+
+  .price-card:hover { box-shadow: 0 8px 40px rgba(0,0,0,0.08); }
+
+  .price-card.popular {
+    background: var(--ink);
+    border-color: transparent;
+    transform: scale(1.03);
+    box-shadow: 0 16px 60px rgba(0,0,0,0.18);
+  }
+
+  .popular-badge {
+    position: absolute;
+    top: 16px; right: 16px;
+    background: var(--accent);
+    color: var(--paper);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: var(--radius-sm);
+  }
+
+  .price-tier {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+
+  .price-amount {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 56px;
+    font-weight: 300;
+    color: var(--ink);
+    line-height: 1;
+    margin-bottom: 4px;
+    letter-spacing: -0.02em;
+  }
+
+  .price-card.popular .price-amount { color: var(--paper); }
+  .price-card.popular .price-tier { color: var(--accent); }
+
+  .price-per {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    margin-bottom: 28px;
+    letter-spacing: 0.08em;
+  }
+
+  .price-card.popular .price-per { color: rgba(255,255,255,0.3); }
+
+  .price-desc {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.65;
+    margin-bottom: 28px;
+    font-weight: 300;
+  }
+
+  .price-card.popular .price-desc { color: rgba(255,255,255,0.4); }
+
+  .price-divider { height: 1px; background: var(--rule); margin-bottom: 24px; }
+  .price-card.popular .price-divider { background: rgba(255,255,255,0.08); }
+
+  .price-features { list-style: none; display: flex; flex-direction: column; gap: 12px; margin-bottom: 32px; }
+
+  .price-feature {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 300;
+  }
+
+  .price-card.popular .price-feature { color: rgba(255,255,255,0.5); }
+
+  .price-check {
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: rgba(74,124,89,0.15);
+    color: var(--sage);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    flex-shrink: 0;
+  }
+
+  .price-card.popular .price-check { background: rgba(200,80,42,0.2); color: var(--accent); }
+
+  .btn-plan {
+    display: block;
+    text-align: center;
+    padding: 13px;
+    border-radius: var(--radius);
+    font-family: 'Manrope', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: transform 0.2s, box-shadow 0.2s;
+    letter-spacing: 0.02em;
+  }
+
+  .btn-plan-outline {
+    border: 1px solid var(--rule);
+    color: var(--ink);
+  }
+
+  .btn-plan-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+  .btn-plan-filled {
+    background: var(--accent);
+    color: var(--paper);
+  }
+
+  .btn-plan-filled:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(200,80,42,0.3); }
+
+  /* ── CTA SECTION ── */
+  .cta-section {
+    background: var(--ink);
+    padding: 120px 64px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cta-glow {
+    position: absolute;
+    width: 600px; height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(200,80,42,0.18) 0%, transparent 65%);
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    animation: breathe 7s ease-in-out infinite alternate;
+  }
+
+  .cta-grid-lines {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+    background-size: 72px 72px;
+  }
+
+  .cta-inner { position: relative; max-width: 700px; margin: 0 auto; }
+
+  .cta-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(44px, 6vw, 80px);
+    font-weight: 300;
+    color: var(--paper);
+    line-height: 1.0;
+    letter-spacing: -0.02em;
+    margin-bottom: 20px;
+  }
+
+  .cta-title em { color: var(--accent); font-style: italic; }
+
+  .cta-sub {
+    font-size: 16px;
+    color: rgba(255,255,255,0.35);
+    font-weight: 300;
+    line-height: 1.8;
+    margin-bottom: 48px;
+    max-width: 460px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .cta-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+  }
+
+  .cta-note {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    color: rgba(255,255,255,0.2);
+    text-transform: uppercase;
+    margin-top: 24px;
+  }
+
+  /* ── FOOTER ── */
+  .site-footer {
+    background: var(--ink);
+    border-top: 1px solid rgba(255,255,255,0.06);
+    padding: 64px;
+  }
+
+  .footer-top {
+    display: grid;
+    grid-template-columns: 2fr repeat(3, 1fr);
+    gap: 48px;
+    padding-bottom: 48px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    margin-bottom: 40px;
+  }
+
+  .footer-brand-col .logo-text { font-size: 26px; margin-bottom: 14px; display: block; }
+
+  .footer-tagline {
+    font-size: 13px;
+    color: rgba(255,255,255,0.3);
+    line-height: 1.7;
+    font-weight: 300;
+    max-width: 260px;
+  }
+
+  .footer-col-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.25);
+    margin-bottom: 16px;
+  }
+
+  .footer-links { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+
+  .footer-links a {
+    font-size: 13px;
+    color: rgba(255,255,255,0.35);
+    text-decoration: none;
+    transition: color 0.2s;
+    font-weight: 300;
+  }
+
+  .footer-links a:hover { color: rgba(255,255,255,0.7); }
+
+  .footer-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .footer-copy {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: rgba(255,255,255,0.2);
+    letter-spacing: 0.08em;
+  }
+
+  .footer-doc-ref {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: rgba(255,255,255,0.15);
+    letter-spacing: 0.1em;
+  }
+
+  /* ── DIVIDER ORNAMENT ── */
+  .ornament {
+    display: flex; align-items: center; gap: 16px;
+    margin: 0 0 64px;
+  }
+
+  .ornament::before, .ornament::after {
+    content: ''; flex: 1; height: 1px; background: var(--rule);
+  }
+
+  .ornament-mark {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 18px; color: var(--accent); line-height: 1;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 960px) {
+    .site-nav { padding: 16px 24px; }
+    .nav-links { display: none; }
+    .hero { padding: 100px 24px 80px; }
+    .hero-stats { grid-template-columns: repeat(2, 1fr); }
+    .section { padding: 80px 24px; }
+    .features-grid, .testimonials-grid, .pricing-grid { grid-template-columns: 1fr; }
+    .price-card.popular { transform: none; }
+    .steps-row { grid-template-columns: 1fr 1fr; gap: 32px; }
+    .steps-row::before { display: none; }
+    .mockup-layout, .problem-grid { grid-template-columns: 1fr; }
+    .footer-top { grid-template-columns: 1fr 1fr; }
+    .toc-fixed { display: none; }
+    .site-footer { padding: 40px 24px; }
+    .cta-section { padding: 80px 24px; }
+    .channels-section { padding: 60px 24px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOC dots -->
+<nav class="toc-fixed" id="toc">
+  <div class="toc-dot on-dark active" data-label="Home"      onclick="smoothTo('#hero')"></div>
+  <div class="toc-dot on-dark"        data-label="Problem"   onclick="smoothTo('#problem')"></div>
+  <div class="toc-dot"                data-label="Features"  onclick="smoothTo('#features')"></div>
+  <div class="toc-dot"                data-label="How It Works" onclick="smoothTo('#how')"></div>
+  <div class="toc-dot"                data-label="Dashboard" onclick="smoothTo('#dashboard')"></div>
+  <div class="toc-dot"                data-label="Reviews"   onclick="smoothTo('#reviews')"></div>
+  <div class="toc-dot"                data-label="Pricing"   onclick="smoothTo('#pricing')"></div>
+</nav>
+
+<!-- ── STICKY NAV ── -->
+<nav class="site-nav" id="site-nav">
+  <a href="#hero" class="nav-logo-mark">
+    <div class="logo-icon">
+      <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="2" y="2" width="5" height="5" rx="1" fill="white" opacity="0.9"/>
+        <rect x="9" y="2" width="5" height="5" rx="1" fill="white" opacity="0.5"/>
+        <rect x="2" y="9" width="5" height="5" rx="1" fill="white" opacity="0.5"/>
+        <rect x="9" y="9" width="5" height="5" rx="1" fill="white" opacity="0.9"/>
+      </svg>
+    </div>
+    <span class="logo-text">TaskFlow</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#features">Features</a></li>
+    <li><a href="#how">How It Works</a></li>
+    <li><a href="#dashboard">Dashboard</a></li>
+    <li><a href="#reviews">Reviews</a></li>
+    <li><a href="#pricing">Pricing</a></li>
+    <li><a href="#cta" class="nav-cta">Get Started</a></li>
+  </ul>
+</nav>
+
+<!-- ── HERO ── -->
+<section class="hero" id="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-glow-1"></div>
+  <div class="hero-glow-2"></div>
+  <div class="hero-glow-3"></div>
+
+  <div class="hero-inner">
+    <div class="hero-eyebrow">Intelligent Work Management</div>
+    <h1 class="hero-title">
+      TaskFlow<br>
+      <span class="line-2">Orchestrated.</span>
+    </h1>
+    <p class="hero-sub">The multi-tenant SaaS platform that brings your entire operation — tasks, teams, channels, and AI — into one beautifully unified workspace.</p>
+    <div class="hero-actions">
+      <a href="#cta" class="btn-primary">
+        Start Free Trial
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+      <a href="#dashboard" class="btn-ghost">See Dashboard</a>
+    </div>
+  </div>
+
+  <div class="hero-stats">
+    <div class="stat-cell">
+      <div class="stat-num">12<em>k+</em></div>
+      <div class="stat-label">Teams Active</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-num">98<em>%</em></div>
+      <div class="stat-label">Uptime SLA</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-num">4<em>×</em></div>
+      <div class="stat-label">Faster Delivery</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-num">7</div>
+      <div class="stat-label">Channels Unified</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── PROBLEM / VALUE ── -->
+<section class="section problem-section" id="problem">
+  <div class="section-inner">
+    <div class="problem-grid">
+      <div class="fade-up">
+        <div class="eyebrow">The Problem</div>
+        <h2 class="section-title">Your team is<br><em>fragmented</em></h2>
+        <p class="section-lead">Scattered tools. Missed messages. No single source of truth. Every day your team wastes hours bridging the gaps between platforms that were never designed to work together.</p>
+        <div class="solution-badge">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="currentColor" stroke-width="1.2"/><path d="M4 6l1.5 1.5L8 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+          TaskFlow Solves This
+        </div>
+      </div>
+      <ul class="problem-list fade-up fade-up-d2">
+        <li class="problem-item">
+          <div class="problem-icon">🗂️</div>
+          <div class="problem-text">
+            <strong>Siloed Task Management</strong>
+            Tasks live in spreadsheets, sticky notes, and three different apps — with no shared visibility across teams.
+          </div>
+        </li>
+        <li class="problem-item">
+          <div class="problem-icon">💬</div>
+          <div class="problem-text">
+            <strong>Communication Chaos</strong>
+            Messages from WhatsApp, email, LinkedIn, and Instagram buried in separate inboxes. Nothing is unified.
+          </div>
+        </li>
+        <li class="problem-item">
+          <div class="problem-icon">📊</div>
+          <div class="problem-text">
+            <strong>No Actionable Insights</strong>
+            You know something is wrong but can't pinpoint where. Reports take hours to compile manually.
+          </div>
+        </li>
+        <li class="problem-item">
+          <div class="problem-icon">🔐</div>
+          <div class="problem-text">
+            <strong>Data You Can't Trust</strong>
+            Mixing data across teams and clients creates risk, confusion, and compliance headaches.
+          </div>
+        </li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ── FEATURES ── -->
+<section class="section" id="features">
+  <div class="section-inner">
+    <div class="eyebrow fade-up">Platform Capabilities</div>
+    <h2 class="section-title fade-up">Everything your<br>team <em>needs</em></h2>
+    <p class="section-lead fade-up">Seven integrated modules, zero integration headaches. Built from the ground up for multi-tenant isolation and enterprise scale.</p>
+
+    <div class="features-grid">
+      <div class="feature-card featured fade-up fade-up-d1">
+        <div class="f-icon-wrap">🏢</div>
+        <div class="f-title">Multi-Tenant Architecture</div>
+        <div class="f-desc">Complete data isolation between companies with custom-claims authentication. Your clients' data is their data — always. Security rules enforced at the database path level.</div>
+        <span class="f-tag">Foundation</span>
+      </div>
+      <div class="feature-card fade-up fade-up-d2">
+        <div class="f-icon-wrap">✅</div>
+        <div class="f-title">Intelligent Task Engine</div>
+        <div class="f-desc">Assign, track, prioritize, and automate tasks across your entire organization. AI predicts delays before they happen and alerts the right people.</div>
+        <span class="f-tag">Core</span>
+      </div>
+      <div class="feature-card fade-up fade-up-d3">
+        <div class="f-icon-wrap">📬</div>
+        <div class="f-title">Omnichannel Inbox</div>
+        <div class="f-desc">WhatsApp, Facebook, Instagram, X, LinkedIn — all in one unified inbox. Respond to every customer from a single, clean interface with full context.</div>
+        <span class="f-tag">Phase 5</span>
+      </div>
+      <div class="feature-card fade-up fade-up-d4">
+        <div class="f-icon-wrap">🧠</div>
+        <div class="f-title">AI Co-Pilot & Moderation</div>
+        <div class="f-desc">Gemini-powered moderation runs in the background. Your Virtual Executive delivers weekly strategic briefs with actionable team insights — automatically.</div>
+        <span class="f-tag">AI</span>
+      </div>
+      <div class="feature-card fade-up fade-up-d5">
+        <div class="f-icon-wrap">🌍</div>
+        <div class="f-title">Global Live Heatmap</div>
+        <div class="f-desc">Plot all your tenant companies on a real-time Leaflet map. Green, yellow, red status indicators update live. Export executive-grade PDF reports in one click.</div>
+        <span class="f-tag">Phase 3</span>
+      </div>
+      <div class="feature-card fade-up fade-up-d6">
+        <div class="f-icon-wrap">💳</div>
+        <div class="f-title">Automated Billing & Access</div>
+        <div class="f-desc">Stripe-native subscription management. When a payment lapses, the system automatically holds access. When renewed, it restores instantly — zero manual intervention.</div>
+        <span class="f-tag">Phase 2</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── HOW IT WORKS ── -->
+<section class="section how-section" id="how">
+  <div class="section-inner">
+    <div class="eyebrow fade-up">Process</div>
+    <h2 class="section-title fade-up">Up and running<br><em>in four steps</em></h2>
+    <p class="section-lead fade-up">From signup to fully operational in under an hour. No engineers required for onboarding.</p>
+
+    <div class="steps-row fade-up fade-up-d2">
+      <div class="step-col">
+        <div class="step-num-wrap"><div class="step-num">01</div></div>
+        <div class="step-title">Create Your Workspace</div>
+        <div class="step-desc">Sign up and your isolated company environment is provisioned instantly with your own data path, authentication, and settings.</div>
+      </div>
+      <div class="step-col">
+        <div class="step-num-wrap"><div class="step-num">02</div></div>
+        <div class="step-title">Invite Your Team</div>
+        <div class="step-desc">Add members with role-based permissions. The AI Onboarding Bot greets each new hire and walks them through the platform automatically.</div>
+      </div>
+      <div class="step-col">
+        <div class="step-num-wrap"><div class="step-num">03</div></div>
+        <div class="step-title">Connect Your Channels</div>
+        <div class="step-desc">Link your social accounts, email, and messaging platforms. All inbound communications flow into your unified inbox within minutes.</div>
+      </div>
+      <div class="step-col">
+        <div class="step-num-wrap"><div class="step-num">04</div></div>
+        <div class="step-title">Let AI Work for You</div>
+        <div class="step-desc">The AI Co-Pilot begins analyzing your operations from day one. Your first Strategic Brief arrives at the end of the week — ready to read.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── CHANNELS STRIP ── -->
+<div class="channels-section">
+  <div class="channels-label">Channels we connect</div>
+  <div class="channels-track-wrap">
+    <div class="channels-track">
+      <!-- first set -->
+      <div class="channel-pill"><div class="channel-pill-icon">💬</div><div class="channel-pill-name">WhatsApp</div></div>
+      <div class="channel-pill"><div class="channel-pill-icon">📘</div><div class="channel-pill-name">Facebook</div></div>
+      <div class="channel-pill"><div class="channel-pill-icon">📸</div><div class="channel-pill-name">Instagram</div></div>
+      <div class="channel-pill"><div class="channel-pill-icon">𝕏</div><div class="channel-pill-name">X (Twitter)</div></div>
+      <div class="channel-pill"><div class="channel-pill-icon">💼</div><div class="channel-pill-name">LinkedIn</div></div>
+      <div class="channel-pill"><div class="channel-pill-icon">✉️</div><div class="channel-pill-name">Email</div></div>
+      <div class="channel-pill"><div class="channel-pill-icon">📱</div><div class="channel-pill-name">Telegram</div></div>
+      <div class="channel-pill"><div class="channel-pill-icon">🔔</div><div class="channel-pill-name">Slack</div></div>
+      <div class="channel-pill"><div class="channel-pill-icon">📞</div><div class="channel-pill-name">Voice</div></div>
+      <div class="channel-pill"><div class="channel-pill-icon">🌐</div><div class="channel-pill-name">Web Widget</div></div>
+      <!-- duplicate for infinite loop -->
+      <div class="channel-pill"><div class="channel-pill-icon">💬</div><div class="channel-pill-name">WhatsApp</div></div>
+      <div class="channel-pill"><div class="channel-pill-icon">📘</div><div class="channel-pill-name">Facebook</div></div>
+      <div class="channel-pill"><div class="channel-pill-icon">📸</div><div class="channel-pill-name">Instagram</div></div>
+      <div class="channel-pill"><div class="channel-pill-icon">𝕏</div><div class="channel-pill-name">X (Twitter)</div></div>
+      <div class="channel-pill"><div class="channel-pill-icon">💼</div><div class="channel-pill-name">LinkedIn</div></div>
+      <div class="channel-pill"><div class="channel-pill-icon">✉️</div><div class="channel-pill-name">Email</div></div>
+      <div class="channel-pill"><div class="channel-pill-icon">📱</div><div class="channel-pill-name">Telegram</div></div>
+      <div class="channel-pill"><div class="channel-pill-icon">🔔</div><div class="channel-pill-name">Slack</div></div>
+      <div class="channel-pill"><div class="channel-pill-icon">📞</div><div class="channel-pill-name">Voice</div></div>
+      <div class="channel-pill"><div class="channel-pill-icon">🌐</div><div class="channel-pill-name">Web Widget</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── DASHBOARD PREVIEW ── -->
+<section class="section mockup-section" id="dashboard">
+  <div class="section-inner">
+    <div class="mockup-layout">
+      <!-- Mockup frame -->
+      <div class="mockup-frame fade-up">
+        <div class="mockup-topbar">
+          <div class="mock-dot mock-dot-r"></div>
+          <div class="mock-dot mock-dot-y"></div>
+          <div class="mock-dot mock-dot-g"></div>
+          <div class="mock-title">TASKFLOW · DASHBOARD</div>
+        </div>
+        <div class="mockup-body">
+          <div class="mock-sidebar">
+            <div class="mock-nav-item active">Dashboard</div>
+            <div class="mock-nav-item">Tasks</div>
+            <div class="mock-nav-item">Inbox</div>
+            <div class="mock-nav-item">Map</div>
+            <div class="mock-nav-item">Reports</div>
+            <div class="mock-nav-item">Settings</div>
+          </div>
+          <div class="mock-main">
+            <div class="mock-stats-row">
+              <div class="mock-stat">
+                <div class="mock-stat-val">247</div>
+                <div class="mock-stat-key">Active Tasks</div>
+              </div>
+              <div class="mock-stat">
+                <div class="mock-stat-val">94<span style="font-size:14px">%</span></div>
+                <div class="mock-stat-key">On Track</div>
+              </div>
+              <div class="mock-stat">
+                <div class="mock-stat-val">18</div>
+                <div class="mock-stat-key">New Messages</div>
+              </div>
+            </div>
+            <div class="mock-card">
+              <div class="mock-card-label">Team Velocity</div>
+              <div class="mock-bar-row">
+                <div class="mock-bar-label">Engineering</div>
+                <div class="mock-bar-track"><div class="mock-bar-fill" style="width:85%"></div></div>
+              </div>
+              <div class="mock-bar-row">
+                <div class="mock-bar-label">Design</div>
+                <div class="mock-bar-track"><div class="mock-bar-fill" style="width:70%; background: var(--gold)"></div></div>
+              </div>
+              <div class="mock-bar-row">
+                <div class="mock-bar-label">Sales</div>
+                <div class="mock-bar-track"><div class="mock-bar-fill" style="width:92%; background: var(--sage)"></div></div>
+              </div>
+            </div>
+            <div class="mock-card">
+              <div class="mock-card-label">Recent Activity</div>
+              <div class="mock-tasks">
+                <div class="mock-task">
+                  <div class="mock-task-dot" style="background: var(--sage)"></div>
+                  <div class="mock-task-text">Onboarding flow reviewed</div>
+                  <div class="mock-task-badge" style="background:rgba(74,124,89,0.15);color:var(--sage)">Done</div>
+                </div>
+                <div class="mock-task">
+                  <div class="mock-task-dot" style="background: var(--accent)"></div>
+                  <div class="mock-task-text">API integration in review</div>
+                  <div class="mock-task-badge" style="background:rgba(200,80,42,0.15);color:var(--accent)">Active</div>
+                </div>
+                <div class="mock-task">
+                  <div class="mock-task-dot" style="background: var(--gold)"></div>
+                  <div class="mock-task-text">Billing setup pending</div>
+                  <div class="mock-task-badge" style="background:rgba(201,168,76,0.15);color:var(--gold)">Soon</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="fade-up fade-up-d2">
+        <div class="eyebrow">Live Dashboard</div>
+        <h2 class="section-title">Every signal,<br><em>at a glance</em></h2>
+        <p class="section-lead" style="margin-bottom:36px">Your command center for the entire operation. Task velocity, team performance, inbound messages, and AI alerts — all in one real-time view that updates as your team works.</p>
+
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div style="display:flex;gap:14px;align-items:flex-start;padding:18px 20px;background:var(--paper);border:1px solid var(--rule);border-radius:var(--radius)">
+            <span style="font-size:20px;flex-shrink:0">⚡</span>
+            <div>
+              <div style="font-size:13px;font-weight:700;color:var(--ink);margin-bottom:3px">Real-Time Updates</div>
+              <div style="font-size:12.5px;color:var(--muted);font-weight:300;line-height:1.6">Firestore listeners push updates instantly — no polling, no page refreshes.</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:14px;align-items:flex-start;padding:18px 20px;background:var(--paper);border:1px solid var(--rule);border-radius:var(--radius)">
+            <span style="font-size:20px;flex-shrink:0">🗺️</span>
+            <div>
+              <div style="font-size:13px;font-weight:700;color:var(--ink);margin-bottom:3px">Global Heatmap View</div>
+              <div style="font-size:12.5px;color:var(--muted);font-weight:300;line-height:1.6">See all tenant companies on a live map with pulsing health indicators.</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:14px;align-items:flex-start;padding:18px 20px;background:var(--paper);border:1px solid var(--rule);border-radius:var(--radius)">
+            <span style="font-size:20px;flex-shrink:0">📄</span>
+            <div>
+              <div style="font-size:13px;font-weight:700;color:var(--ink);margin-bottom:3px">One-Click PDF Reports</div>
+              <div style="font-size:12.5px;color:var(--muted);font-weight:300;line-height:1.6">Generate executive-grade reports from any view in seconds. Share-ready instantly.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── TESTIMONIALS ── -->
+<section class="section" id="reviews">
+  <div class="section-inner">
+    <div class="eyebrow fade-up">Client Stories</div>
+    <h2 class="section-title fade-up">Trusted by teams<br>that <em>deliver</em></h2>
+    <p class="section-lead fade-up">From boutique agencies to enterprise operations — TaskFlow scales to every size without losing its speed.</p>
+
+    <div class="testimonials-grid">
+      <div class="testi-card fade-up fade-up-d1">
+        <div class="testi-quote-mark">"</div>
+        <div class="testi-text">Within the first week, our client response time dropped by 60%. Having all our social channels in one place feels like we finally have our operations under control.</div>
+        <div class="testi-author">
+          <div class="testi-avatar">N</div>
+          <div>
+            <div class="testi-name">Nour Al-Rashid</div>
+            <div class="testi-role">COO · Meridian Agency</div>
+          </div>
+        </div>
+      </div>
+      <div class="testi-card fade-up fade-up-d2">
+        <div class="testi-quote-mark">"</div>
+        <div class="testi-text">The AI Strategic Brief that lands in my inbox every Monday is genuinely the most useful document I read all week. It's like having a senior analyst who never sleeps.</div>
+        <div class="testi-author">
+          <div class="testi-avatar">K</div>
+          <div>
+            <div class="testi-name">Karim Mansour</div>
+            <div class="testi-role">CEO · Vertex Solutions</div>
+          </div>
+        </div>
+      </div>
+      <div class="testi-card fade-up fade-up-d3">
+        <div class="testi-quote-mark">"</div>
+        <div class="testi-text">We manage seven client accounts. Before TaskFlow, that meant seven sets of logins and constant context-switching. Now it's one workspace, and our clients love the white-label portals.</div>
+        <div class="testi-author">
+          <div class="testi-avatar">L</div>
+          <div>
+            <div class="testi-name">Lena Bouchard</div>
+            <div class="testi-role">Director · Elara Digital</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── PRICING ── -->
+<section class="section" style="background: var(--paper-warm); border-top: 1px solid var(--rule);" id="pricing">
+  <div class="section-inner">
+    <div class="eyebrow fade-up">Simple Pricing</div>
+    <h2 class="section-title fade-up">Scale without<br><em>surprises</em></h2>
+    <p class="section-lead fade-up">Every plan includes strict data isolation, real-time sync, and full onboarding support. Upgrade or downgrade anytime through your admin panel.</p>
+
+    <div class="pricing-grid fade-up fade-up-d1">
+      <!-- Starter -->
+      <div class="price-card">
+        <div class="price-tier">Starter</div>
+        <div class="price-amount">$49</div>
+        <div class="price-per">per month · up to 10 users</div>
+        <div class="price-desc">Perfect for small teams getting their operations under control for the first time.</div>
+        <div class="price-divider"></div>
+        <ul class="price-features">
+          <li class="price-feature"><div class="price-check">✓</div>Task Management Engine</li>
+          <li class="price-feature"><div class="price-check">✓</div>2 Social Channel Connections</li>
+          <li class="price-feature"><div class="price-check">✓</div>Unified Inbox</li>
+          <li class="price-feature"><div class="price-check">✓</div>Basic Analytics Dashboard</li>
+          <li class="price-feature"><div class="price-check">✓</div>AI Onboarding Bot</li>
+        </ul>
+        <a href="#cta" class="btn-plan btn-plan-outline">Get Started</a>
+      </div>
+
+      <!-- Pro -->
+      <div class="price-card popular">
+        <div class="popular-badge">Most Popular</div>
+        <div class="price-tier">Professional</div>
+        <div class="price-amount" style="color:var(--paper)">$149</div>
+        <div class="price-per">per month · up to 50 users</div>
+        <div class="price-desc" style="color:rgba(255,255,255,0.4)">For growing agencies that need omnichannel coverage and AI-powered insights.</div>
+        <div class="price-divider"></div>
+        <ul class="price-features">
+          <li class="price-feature"><div class="price-check">✓</div>Everything in Starter</li>
+          <li class="price-feature"><div class="price-check">✓</div>All 7 Channel Integrations</li>
+          <li class="price-feature"><div class="price-check">✓</div>AI Co-Pilot & Weekly Briefs</li>
+          <li class="price-feature"><div class="price-check">✓</div>Predictive Task Warnings</li>
+          <li class="price-feature"><div class="price-check">✓</div>Global Heatmap & PDF Reports</li>
+          <li class="price-feature"><div class="price-check">✓</div>Broadcast & Changelog System</li>
+        </ul>
+        <a href="#cta" class="btn-plan btn-plan-filled">Start Free Trial</a>
+      </div>
+
+      <!-- Enterprise -->
+      <div class="price-card">
+        <div class="price-tier">Enterprise</div>
+        <div class="price-amount">Custom</div>
+        <div class="price-per">contact us for volume pricing</div>
+        <div class="price-desc">For large organizations managing multiple brands, regions, or client portfolios.</div>
+        <div class="price-divider"></div>
+        <ul class="price-features">
+          <li class="price-feature"><div class="price-check">✓</div>Everything in Professional</li>
+          <li class="price-feature"><div class="price-check">✓</div>White-Label Client Portals</li>
+          <li class="price-feature"><div class="price-check">✓</div>B2B Talent Marketplace Access</li>
+          <li class="price-feature"><div class="price-check">✓</div>Dedicated Super Admin Panel</li>
+          <li class="price-feature"><div class="price-check">✓</div>Custom SLA & Onboarding</li>
+          <li class="price-feature"><div class="price-check">✓</div>Priority Support & SLAs</li>
+        </ul>
+        <a href="#cta" class="btn-plan btn-plan-outline">Talk to Sales</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── CTA ── -->
+<section class="cta-section" id="cta">
+  <div class="cta-grid-lines"></div>
+  <div class="cta-glow"></div>
+  <div class="cta-inner fade-up">
+    <div class="eyebrow" style="justify-content:center;margin-bottom:20px">Get Started Today</div>
+    <h2 class="cta-title">Your team deserves<br><em>better tools</em></h2>
+    <p class="cta-sub">Join thousands of teams that have unified their workflow, communications, and intelligence on TaskFlow. No credit card required to start.</p>
+    <div class="cta-actions">
+      <a href="#" class="btn-primary" style="font-size:14px;padding:16px 36px">
+        Start Free 14-Day Trial
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+      <a href="#" class="btn-ghost" style="font-size:10px">Request a Demo</a>
+    </div>
+    <div class="cta-note">No credit card · Full access · Cancel anytime</div>
+  </div>
+</section>
+
+<!-- ── FOOTER ── -->
+<footer class="site-footer">
+  <div class="footer-top">
+    <div class="footer-brand-col">
+      <a href="#hero" class="nav-logo-mark" style="text-decoration:none;display:inline-flex;margin-bottom:16px">
+        <div class="logo-icon" style="width:28px;height:28px">
+          <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:14px;height:14px">
+            <rect x="2" y="2" width="5" height="5" rx="1" fill="white" opacity="0.9"/>
+            <rect x="9" y="2" width="5" height="5" rx="1" fill="white" opacity="0.5"/>
+            <rect x="2" y="9" width="5" height="5" rx="1" fill="white" opacity="0.5"/>
+            <rect x="9" y="9" width="5" height="5" rx="1" fill="white" opacity="0.9"/>
+          </svg>
+        </div>
+        <span class="logo-text" style="font-size:20px">TaskFlow</span>
+      </a>
+      <p class="footer-tagline">Intelligent work management for the modern multi-tenant enterprise. Orchestrate everything — tasks, teams, and communications — in one unified platform.</p>
+    </div>
+    <div>
+      <div class="footer-col-title">Platform</div>
+      <ul class="footer-links">
+        <li><a href="#">Task Engine</a></li>
+        <li><a href="#">Omnichannel Inbox</a></li>
+        <li><a href="#">AI Co-Pilot</a></li>
+        <li><a href="#">Global Heatmap</a></li>
+        <li><a href="#">Billing & Access</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="footer-col-title">Company</div>
+      <ul class="footer-links">
+        <li><a href="#">About Us</a></li>
+        <li><a href="#">Careers</a></li>
+        <li><a href="#">Blog</a></li>
+        <li><a href="#">Press Kit</a></li>
+        <li><a href="#">Contact</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="footer-col-title">Legal</div>
+      <ul class="footer-links">
+        <li><a href="#">Privacy Policy</a></li>
+        <li><a href="#">Terms of Service</a></li>
+        <li><a href="#">Data Processing</a></li>
+        <li><a href="#">Security</a></li>
+        <li><a href="#">SLA</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <div class="footer-copy">© 2025 TaskFlow Inc. All rights reserved.</div>
+    <div class="footer-doc-ref">Built on Firebase · Powered by AI · Secured by Design</div>
+  </div>
+</footer>
+
+<script>
+  // ── NAV SCROLL EFFECT ──
+  const nav = document.getElementById('site-nav');
+  window.addEventListener('scroll', () => {
+    nav.classList.toggle('scrolled', window.scrollY > 60);
+  }, { passive: true });
+
+  // ── FADE-UP OBSERVER ──
+  const fadeObs = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+  document.querySelectorAll('.fade-up').forEach(el => fadeObs.observe(el));
+
+  // ── TOC DOTS ──
+  const sectionIds = ['hero','problem','features','how','dashboard','reviews','pricing'];
+  const dots = document.querySelectorAll('.toc-dot');
+  const darkSections = ['hero','how'];
+
+  const secObs = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const id = e.target.id;
+        const idx = sectionIds.indexOf(id);
+        const isDark = darkSections.includes(id) || id === 'how';
+
+        dots.forEach((d, i) => {
+          d.classList.toggle('active', i === idx);
+          // update color class based on section darkness
+          if (i === idx) {
+            d.classList.toggle('on-dark', isDark);
+          }
+        });
+      }
+    });
+  }, { threshold: 0.4 });
+
+  sectionIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) secObs.observe(el);
+  });
+
+  function smoothTo(sel) {
+    const el = document.querySelector(sel);
+    if (el) el.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  // ── COUNTER ANIMATION ──
+  function animateCounter(el, target, suffix = '') {
+    let start = 0;
+    const duration = 1800;
+    const step = timestamp => {
+      if (!start) start = timestamp;
+      const progress = Math.min((timestamp - start) / duration, 1);
+      const ease = 1 - Math.pow(1 - progress, 3);
+      const val = Math.floor(ease * target);
+      el.textContent = val + (progress < 1 ? '' : suffix);
+      if (progress < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }
+
+  // Trigger counters when hero stats enter view
+  const statsObs = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        document.querySelectorAll('.stat-num').forEach(el => {
+          const em = el.querySelector('em');
+          const suffix = em ? em.textContent : '';
+          const num = parseInt(el.textContent);
+          if (!isNaN(num)) animateCounter(el, num, '');
+        });
+        statsObs.disconnect();
+      }
+    });
+  }, { threshold: 0.5 });
+
+  const heroStats = document.querySelector('.hero-stats');
+  if (heroStats) statsObs.observe(heroStats);
+</script>
+</body>
+</html>
